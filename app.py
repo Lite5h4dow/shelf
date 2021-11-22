@@ -114,5 +114,10 @@ def deletePhone():
     d.deleteById(request.json["id"])
     return "Deleted", 200
 
+@app.put("/scanTo")
+def scanTo():
+    if request.json == None:
+        return "invalid request", 400
+
 if __name__ == "__main__":
     app.run(debug=True)
