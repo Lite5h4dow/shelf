@@ -1,7 +1,15 @@
 from flask import Flask, request, jsonify, make_response
 from pysondb import db
+import json
+import os
 
 app = Flask(__name__)
+
+#importing config file and defaulting to None if file isnt there
+config = None
+if (os.path.exists("./config.json")):
+    with open("./config.json", "r") as jsonfile: 
+        config=json.load(jsonfile)
 
 d = db.getDb("./db.json")
 
