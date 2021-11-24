@@ -117,7 +117,10 @@ def deletePhone():
 @app.put("/scanTo")
 def scanTo():
     if request.json == None:
-        return "invalid request", 400
+        return "Invalid Request", 400
+    
+    if "position" not in request.json:
+        return "Misinog destination", 400
 
 if __name__ == "__main__":
     app.run(debug=True)
