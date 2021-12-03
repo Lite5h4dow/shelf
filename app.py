@@ -1,9 +1,12 @@
 from flask import Flask, request, jsonify, make_response
+from flask.templating import render_template
 from pysondb import db
 import json
 import os
-
-app = Flask(__name__)
+import time
+import board
+import neopixel
+import math
 
 #importing config file and defaulting to None if file isnt there
 config = None
@@ -11,7 +14,18 @@ if (os.path.exists("./config.json")):
     with open("./config.json", "r") as jsonfile: 
         config=json.load(jsonfile)
 
+app = Flask(__name__)
+pixel_pin = board.D18
+
 d = db.getDb("./db.json")
+num_pixels = 144
+group_size = d.getAll().count
+tail = 6
+Order = neopixel.RGB
+pixels = neopixel.NeoPixel(
+            pixel_pin, num_pixels, brightness=0.1, auto_write=False, pixel_order=Order
+        )
+
 
 ''' Utility function that puts all 
 non-positive (0 and negative) numbers on left 
@@ -61,6 +75,37 @@ def findMissing(arr, size):
 def findUnused():
     positions = [p['position'] for p in d.getAll()]
     return findMissing(positions, positions.__len__())
+
+#returns the ammount of pixels are available to be allocated to groups
+def usable_pixels():
+    return int(num_pixels - (num_pixels % group_size))
+
+#returns the maximum ammount of usable groups in the provided pixel count
+def max_groups():
+    return math.floor(usable_pixels() / group_size)
+
+#returns the group that the current led is in
+def current_group(pos):
+    return math.floor(pos/group_size)
+
+#returns position relative to the brightest group
+def wrap_calc(pos, brightest):
+    group = current_group(pos)
+    sigma = brightest - group
+    return sigma if sigma >= 0 else sigma + max_groups()
+
+# run scan animation
+def scan_to(scan_to):
+    for group in range (math.floor(scan_to / group_size)):
+        for position in range(scan_to if scan_to <= usable_pixels() else usable_pixels()):
+            usable_tail = wrap_calc(position, group) +1
+            if usable_tail <= tail:
+                r = g = b = math.ceil(255 / usable_tail)
+                pixels[position] = (r,g,b)
+            else:
+                pixels[position] = (0,0,0)
+        pixels.show()
+        time.sleep(0.001)
 
 
 
@@ -118,6 +163,17 @@ def deletePhone():
 def scanTo():
     if request.json == None:
         return "invalid request", 400
+    
+    scan_to(request.json.position)
+    return 200
+
+@app.route("/")
+def index():
+    return render_template("index.html", phones=d.getAll())
+
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
