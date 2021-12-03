@@ -164,16 +164,15 @@ def scanTo():
     if request.json == None:
         return "invalid request", 400
     
+    if "position" not in request.json:
+        return "position missing", 400
+
     scan_to(request.json.position)
     return 200
 
 @app.route("/")
 def index():
     return render_template("index.html", phones=d.getAll())
-
-
-
-
 
 if __name__ == "__main__":
     app.run(debug=True)
