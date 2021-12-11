@@ -1,25 +1,27 @@
 from flask import Flask, request, jsonify, make_response
 from flask.templating import render_template
-from pysondb import db
-import json
-import os
+from tinydb import TinyDB,Query 
+# import json
+# import os
+import uuid
 # import time
 # import board
 # import neopixel
 # import math
 
 #importing config file and defaulting to None if file isnt there
-config = None
-if (os.path.exists("./config.json")):
-    with open("./config.json", "r") as jsonfile: 
-        config=json.load(jsonfile)
-
+# config = None
+# if (os.path.exists("./config.json")):
+#     with open("./config.json", "r") as jsonfile: 
+#         config=json.load(jsonfile)
+# 
 app = Flask(__name__)
+app.debug = True
 # pixel_pin = board.D18
 
-d = db.getDb("./db.json")
+d = TinyDB("./db.json")
 num_pixels = 144
-group_size = d.getAll().count
+group_size = d.all().count
 tail = 6
 # Order = neopixel.RGB
 # pixels = neopixel.NeoPixel(
@@ -73,7 +75,7 @@ def findMissing(arr, size):
     return findMissingPositive(arr[shift:], size - shift) 
 
 def findUnused():
-    positions = [p['position'] for p in d.getAll()]
+    positions = [p['position'] for p in d.all()]
     return findMissing(positions, positions.__len__())
 
 #returns the ammount of pixels are available to be allocated to groups
@@ -111,12 +113,15 @@ def findUnused():
 
 class Phone:
     def __init__(self, name, position, colour):
+        self.uuid = str(uuid.uuid4())
         self.name = name
         self.position = position
         self.colour = colour
 
     def data(self):
-        return {"name": self.name, "position": self.position, "color": self.colour}
+        return {"uuid":self.uuid, "name": self.name, "position": self.position, "color": self.colour}
+
+phone = Query()
 
 @app.get("/getPhones")
 def getPhones():
@@ -133,7 +138,7 @@ def addPhone():
     colour = request.json["colour"] if "colour" in request.json else {"r":255, "g":255, "b":255}
     position = request.json["position"] if "position" in request.json else findUnused()
     p = Phone(name, position, colour)
-    d.add(p.data())
+    d.insert(p.data())
 
     return "Added phone", 200
 
@@ -142,12 +147,12 @@ def editPhone():
     if request.json == None:
         return "Invalid Request", 400
 
-    p = d.getById(request.json['id'])
+    p = d.search(phone.uuid == request.json['uuid'])[0]
     
     if p == None:
         return "Phone Dosent Exist", 400
 
-    d.updateById(request.json["id"], request.json)
+    d.update(request.json, phone.uuid == request.json["uuid"])
 
     return "updatedPhone", 200
     
@@ -156,34 +161,34 @@ def deletePhone():
     if request.json == None:
         return "Invalid Request", 400
 
-    d.deleteById(request.json["id"])
+    d.remove(phone.uuid == request.json["uuid"])
     return "Deleted", 200
 
-@app.put("/scanTo")
-def scanTo():
-    if request.json == None:
-        return "invalid request", 400
-    
-    if "position" not in request.json:
-        return "position missing", 400
-
-    print("would scan")
+# @app.put("/scanTo")
+# def scanTo():
+#     if request.json == None:
+#         return "invalid request", 400
+#     
+#     if "position" not in request.json:
+#         return "position missing", 400
+# 
+#     print("would scan")
 #     scan_to(request.json.position)
-    return 200
-
-@app.route("/")
-def index():
-    return render_template("index.html", phones=d.getAll())
-
-@app.get("pin")
-def pinUnlock():
-    if request.json == None:
-        return "no json provided", 400
-
-    if "pin" not in request.json:
-        return "no pin provided", 400
-
-
+#     return 200
+# 
+# @app.route("/")
+# def index():
+#     return render_template("index.html", phones=d.getAll())
+# 
+# @app.get("pin")
+# def pinUnlock():
+#     if request.json == None:
+#         return "no json provided", 400
+# 
+#     if "pin" not in request.json:
+#         return "no pin provided", 400
+# 
+# 
 #     lock = board.D12
 #     if request.json.pin == 1234:
 #         lock.HIGH
