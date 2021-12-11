@@ -174,5 +174,21 @@ def scanTo():
 def index():
     return render_template("index.html", phones=d.getAll())
 
+@app.get("pin")
+def pinUnlock():
+    if request.json == None:
+        return "no json provided", 400
+
+    if "pin" not in request.json:
+        return "no pin provided", 400
+
+
+    lock = board.D12
+    if request.json.pin == 1234:
+        lock.HIGH
+    else 
+        lock.LOW
+
+
 if __name__ == "__main__":
     app.run(debug=True)
