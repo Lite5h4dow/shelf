@@ -15,7 +15,7 @@ import uuid
 #     with open("./config.json", "r") as jsonfile: 
 #         config=json.load(jsonfile)
 # 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path="", static_folder="static", template_folder="templates")
 app.debug = True
 # pixel_pin = board.D18
 
@@ -175,11 +175,11 @@ def deletePhone():
 #     print("would scan")
 #     scan_to(request.json.position)
 #     return 200
-# 
-# @app.route("/")
-# def index():
-#     return render_template("index.html", phones=d.getAll())
-# 
+
+@app.route("/")
+def index():
+    return render_template("index.html", phones=d.all())
+
 # @app.get("pin")
 # def pinUnlock():
 #     if request.json == None:
