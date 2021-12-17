@@ -1,1 +1,0 @@
-"""Board definitions from NanoPi"""

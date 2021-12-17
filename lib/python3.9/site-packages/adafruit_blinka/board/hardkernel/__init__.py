@@ -1,1 +1,0 @@
-"""Boards definition from HardKernel"""
