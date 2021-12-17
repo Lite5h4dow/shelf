@@ -111,6 +111,9 @@ def findUnused():
 # 
 
 
+def byPosition(phone):
+    return phone.position
+
 class Phone:
     def __init__(self, name, position, colour):
         self.uuid = str(uuid.uuid4())
@@ -178,7 +181,7 @@ def deletePhone():
 
 @app.route("/")
 def index():
-    return render_template("index.html", phones=d.all())
+    return render_template("index.html", phones=d.all().sort(key=byPosition))
 
 # @app.get("pin")
 # def pinUnlock():

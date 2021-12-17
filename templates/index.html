@@ -7,5 +7,14 @@
   hello
 </div>
 <div class="ui container">
+  <div class="ui cards">
+    {% for phone in phones %}
+      <div class="card">
+	<div class="header">
+	  {{ phone.name }}
+	</div>
+      </div>
+    {% endfor %}
+  </div>
 </div>
 {% endblock %}
