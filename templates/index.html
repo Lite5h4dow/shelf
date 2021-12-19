@@ -7,14 +7,49 @@
   hello
 </div>
 <div class="ui container">
-  <div class="ui cards">
+  <div class="ui three column centered grid">
     {% for phone in phones %}
-      <div class="card">
-	<div class="header">
-	  {{ phone.name }}
+    <div class="column">
+      <div class="ui fluid card">
+	<div class="content">
+	  <i class="right floated red x icon"></i>
+	  <div class="header">
+	    {{ phone.name }}
+	  </div>
+	  <div class="description">
+	    position: {{ phone.position }}
+	  </div>
+	</div>
+	<div class="ui bottom attached button">
+	  Scan To
 	</div>
       </div>
+    </div>
     {% endfor %}
+  </div>
+  <div class="ui green segment">
+    <div class="ui medium header">
+      Add a new phone
+    </div>
+    <form id="new_phone" class="ui form" method="POST">
+      <div class="field">
+	<label>Phone Name:</label>
+	<input placeholder="Samsung Galaxy Note 8" name="name" />
+      </div>
+      <div class="fields">
+	<div class="field">
+	  <label>Position:</label>
+	  <input name="position" type="number" />
+	</div>
+	<div class="field">
+	  <label>Colour:</label>
+	  <input name="colour" type="color"/>
+	</div>
+      </div>
+      <button class="ui button" type="submit">
+	Submit
+      </button>
+    </form>
   </div>
 </div>
 {% endblock %}

@@ -112,7 +112,7 @@ def findUnused():
 
 
 def byPosition(phone):
-    return phone.position
+    return phone['position']
 
 class Phone:
     def __init__(self, name, position, colour):
@@ -131,19 +131,6 @@ def getPhones():
     response = make_response(jsonify(d.getAll()))
     response.headers["Content-Type"] = "application/json"
     return response
-
-@app.post("/addPhone")
-def addPhone():
-    if request.json == None:
-        return "Invalid Request", 400
-
-    name = request.json["name"] if "name" in request.json else "unknown phone"
-    colour = request.json["colour"] if "colour" in request.json else {"r":255, "g":255, "b":255}
-    position = request.json["position"] if "position" in request.json else findUnused()
-    p = Phone(name, position, colour)
-    d.insert(p.data())
-
-    return "Added phone", 200
 
 @app.post("/editPhone")
 def editPhone():
@@ -179,9 +166,30 @@ def deletePhone():
 #     scan_to(request.json.position)
 #     return 200
 
-@app.route("/")
+@app.get("/")
 def index():
-    return render_template("index.html", phones=d.all().sort(key=byPosition))
+    phones = d.all()#.sort(key=byPosition)
+    if phones == None:
+        phones = []
+    return render_template("index.html", phones=phones)
+
+@app.post("/")
+def addPhone():
+    if request.args == None:
+        return "Invalid Request", 400
+
+    name = request.form.get('name') if request.form.get('name') else "unknown phone"
+    colour = request.form.get('colour') if request.form.get('colour') else "#FFFFFF"
+    position = request.form.get('position') if request.form.get('position') else findUnused()
+    p = Phone(name, position, colour)
+    d.insert(p.data())
+    phones = d.all()#.sort(key=byPosition)
+    if phones == None:
+        phones = []
+
+    return render_template("index.html", phones=phones)
+
+
 
 # @app.get("pin")
 # def pinUnlock():
