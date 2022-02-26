@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, make_response
 from flask.templating import render_template
 from tinydb import TinyDB,Query 
+from adafruit_led_animation.animation.chase import Chase
 # import json
 # import os
 import uuid
@@ -15,6 +16,8 @@ import math
 #     with open("./config.json", "r") as jsonfile: 
 #         config=json.load(jsonfile)
 # 
+
+
 app = Flask(__name__, static_url_path="", static_folder="static", template_folder="templates")
 app.debug = True
 pixel_pin = board.D18
@@ -101,41 +104,46 @@ def scan_to(scan_to):
     g = current_group(scan_to)
     tail_end = g-tail
 
-    for group in range(g+1):
-        a = [(0,0,0)] * ((g-tail)*group_pixels) if (g-tail) < 0 else []
-        b = []
-        for i in range(tail-g):
-            rc = (255/(tail+1) * i)
-            gc = (255/(tail+1) * i)
-            bc = (255/(tail+1) * i)
-            t = [(rc,gc,bc)] * group_pixels
-            b = b + t
+    for group in range(g):
+        pixels.fill((0,0,0))
+        for i in range(num_pixels):
+            i_group = math.floor(math.floor(i/4.3333333333)/3)
+            if i_group == group:
+                pixels[i] = (255,255,255)
 
-        c = [(255,255,255)] * group_pixels
-        inter = a+b+c
-        remainder = [(0,0,0)] * (num_pixels - len(inter))
+#            if i_group < group and i_group > (group - tail):
+#                diff = group - i_group
+#                gamma = tail - diff 
+#                tail_pos = tail - gamma
+#                mult = tail_pos/tail
+#                print(mult)
+#                pixels[i] = (int(255 * mult), int(255 * mult), int(255 * mult))           
+#        pixels.show()
+#        time.sleep(0.001)
 
-        whole = inter+remainder
-        for i, val in enumerate(whole):
-            pixels[i] = val
-
-        print(whole)
-        time.sleep(0.001)
-        pixels.show()
-
-def light_position(position):
-    before = [(0,0,0)] * (current_group(position) * group_pixels)
-    g = [(255,255,255)] * group_pixels
-    splat = before + g
-    after = [(0,0,0)] * (num_pixels - len(splat))
-    result = splat + after
-    
-    print(result)
-
-    for i, val in enumerate(result):
-        pixels[i] = val
+    time.sleep(20)
+    pixels.fill((0,0,0))
     pixels.show()
 
+                
+
+    
+
+def light_position(position):
+    start_pos = ((current_group(position) *group_pixels) + 1)
+    print(start_pos)
+    pixels.fill((0,0,0))
+    for i in range(start_pos, start_pos + group_pixels):
+        pixels[i] = (255,255,255)
+
+    pixels.show()
+    time.sleep(20)
+    pixels.fill((0,0,0))
+    pixels.show()
+
+
+
+    
 def byPosition(phone):
     return phone['position']
 
