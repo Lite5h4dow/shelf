@@ -12,7 +12,7 @@
     <div class="column">
       <div class="ui fluid card">
 	<div class="content">
-	  <i class="right floated red x icon"></i>
+		<i id="delete{{phone.uuid}}" class="right floated red x icon"></i>
 	  <div class="header">
 	    {{ phone.name }}
 	  </div>
@@ -20,11 +20,29 @@
 	    position: {{ phone.position }}
 	  </div>
 	</div>
-	<div class="ui bottom attached button">
-	  Scan To
+	<div  class="ui two bottom attached buttons">
+		<div id="scanButton{{ phone.position }}" class="ui button">
+	  		Scan To
+		</div>
+		<div id="lightButton{{ phone.position }}" class="ui button"> 
+			Light
+		</div>
 	</div>
       </div>
     </div>
+    <script>
+	console.log("{{phone.position}}")
+	document.getElementById("scanButton{{ phone.position }}").addEventListener("click", function(){
+	    fetch("/scanTo/{{ phone.position }}",{method:"POST"})
+	})
+        document.getElementById("delete{{ phone.uuid }}").addEventListener("click", function(){
+            fetch("/deletePhone/{{ phone.uuid}}",{method:"POST"})
+	    window.location.reload()
+	})
+	document.getElementById("lightButton{{ phone.position }}").addEventListener("click", function(){
+		fetch("/lightPosition/{{ phone.position }}", {method:"POST"})
+	})
+    </script>
     {% endfor %}
   </div>
   <div class="ui green segment">
