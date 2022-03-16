@@ -1,22 +1,13 @@
 from flask import Flask, request, jsonify, make_response
 from flask.templating import render_template
 from tinydb import TinyDB,Query 
-from adafruit_led_animation.animation.chase import Chase
-# import json
-# import os
+from adafruit_led_animation.animation.colorcycle import ColorCycle
 import uuid
 import time
 import board
 import neopixel
 import math
-
-#importing config file and defaulting to None if file isnt there
-# config = None
-# if (os.path.exists("./config.json")):
-#     with open("./config.json", "r") as jsonfile: 
-#         config=json.load(jsonfile)
-# 
-
+import threading
 
 app = Flask(__name__, static_url_path="", static_folder="static", template_folder="templates")
 app.debug = True
@@ -32,6 +23,26 @@ pixels = neopixel.NeoPixel(
             pixel_pin, num_pixels, brightness=1, auto_write=False, pixel_order=Order
         )
 
+class StoppableThread(threading.Thread):
+    def __init__(self):
+        super(StoppableThread, self).__init__()
+        self._stop_event = threading.Event()
+
+    def stop(self):
+        slef._stop_event.set()
+
+    def join(self, *args, **kwargs):
+        self.stop()
+        super(StoppableThread, self).join(*args, **kwargs)
+
+    def run(self):
+        colorcycle = ColorCycle(pixels, 0.5)
+        while not self._stop_event.is_set():
+            colorcycle.animate()
+
+idle = StoppableThread()
+
+idle.run()
 
 ''' Utility function that puts all 
 non-positive (0 and negative) numbers on left 
@@ -43,7 +54,6 @@ def segregate(arr, size):
             arr[i], arr[j] = arr[j], arr[i]
             j += 1 # increment count of non-positive integers 
     return j 
-  
   
 ''' Find the smallest positive missing number 
 in an array that contains all positive integers '''
@@ -121,13 +131,9 @@ def scan_to(scan_to):
 #        pixels.show()
 #        time.sleep(0.001)
 
-    time.sleep(20)
+    time.sleep(30)
     pixels.fill((0,0,0))
     pixels.show()
-
-                
-
-    
 
 def light_position(position):
     start_pos = ((current_group(position) *group_pixels) + 1)
@@ -137,12 +143,9 @@ def light_position(position):
         pixels[i] = (255,255,255)
 
     pixels.show()
-    time.sleep(20)
+    time.sleep(30)
     pixels.fill((0,0,0))
     pixels.show()
-
-
-
     
 def byPosition(phone):
     return phone['position']
@@ -186,8 +189,9 @@ def deletePhone(uuid):
 
 @app.post("/scanTo/<position>")
 def scanTo(position):
-    print("would scan")
+    idle.join()
     scan_to(int(position))
+    idle.run()
     return "",200
 
 @app.get("/")
@@ -215,10 +219,10 @@ def addPhone():
 
 @app.post("/lightPosition/<position>")
 def lightPosition(position):
+    idle.join()
     light_position(int(position))
+    idle.run()
     return "", 200
-
-
 
 # @app.get("pin")
 # def pinUnlock():
@@ -236,4 +240,5 @@ def lightPosition(position):
 #         lock.LOW
 
 if __name__ == "__main__":
+
     app.run(debug=True)
