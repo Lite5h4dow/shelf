@@ -42,7 +42,6 @@ class StoppableThread(threading.Thread):
 
 idle = StoppableThread()
 
-idle.run()
 
 ''' Utility function that puts all 
 non-positive (0 and negative) numbers on left 
@@ -240,5 +239,5 @@ def lightPosition(position):
 #         lock.LOW
 
 if __name__ == "__main__":
-
+    idle.run()
     app.run(debug=True)
