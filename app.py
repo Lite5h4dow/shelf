@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, make_response
 from flask.templating import render_template
 from tinydb import TinyDB,Query 
-from adafruit_led_animation.animation.colorcycle import ColorCycle
+from adafruit_led_animation.animation.rainbow import Rainbow 
 import uuid
 import time
 import board
@@ -20,27 +20,30 @@ group_pixels = 13
 tail = 3 
 Order = neopixel.RGB
 pixels = neopixel.NeoPixel(
-            pixel_pin, num_pixels, brightness=1, auto_write=False, pixel_order=Order
+            pixel_pin, num_pixels, brightness=0.7, auto_write=False, pixel_order=Order
         )
 
 class StoppableThread(threading.Thread):
-    def __init__(self):
-        super(StoppableThread, self).__init__()
+    """Thread class with a stop() method. The thread itself has to check
+    regularly for the stopped() condition."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._stop_event = threading.Event()
 
     def stop(self):
-        slef._stop_event.set()
+        self._stop_event.set()
 
-    def join(self, *args, **kwargs):
-        self.stop()
-        super(StoppableThread, self).join(*args, **kwargs)
+    def stopped(self):
+        return self._stop_event.is_set()
 
-    def run(self):
-        colorcycle = ColorCycle(pixels, 0.5)
-        while not self._stop_event.is_set():
-            colorcycle.animate()
+def funct():
+       animation = Rainbow(pixels, 0.5, 4)
+       print(threading.current_thread())
+       while not threading.current_thread().stopped():
+           animation.animate()
 
-idle = StoppableThread()
+idle = StoppableThread(target=funct)
+idle.start()
 
 
 ''' Utility function that puts all 
@@ -163,7 +166,7 @@ phone = Query()
 
 @app.get("/getPhones")
 def getPhones():
-    response = make_response(jsonify(d.getAll()))
+    response = make_response(jsonify(d.all()))
     response.headers["Content-Type"] = "application/json"
     return response
 
@@ -188,7 +191,7 @@ def deletePhone(uuid):
 
 @app.post("/scanTo/<position>")
 def scanTo(position):
-    idle.join()
+    idle.stop()
     scan_to(int(position))
     idle.run()
     return "",200
@@ -218,7 +221,7 @@ def addPhone():
 
 @app.post("/lightPosition/<position>")
 def lightPosition(position):
-    idle.join()
+    idle.stop()
     light_position(int(position))
     idle.run()
     return "", 200
@@ -239,5 +242,4 @@ def lightPosition(position):
 #         lock.LOW
 
 if __name__ == "__main__":
-    idle.run()
     app.run(debug=True)
